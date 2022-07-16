@@ -1,8 +1,7 @@
-import { type } from "os"
-
 class DeleteEvent {
     constructor( 
-        private readonly loadGroupRepository: LoadGroupRepository
+        private readonly loadGroupRepository: LoadGroupRepository,
+        private readonly deleteEventRepository: DeleteEventRepository
     ) {}
 
     async perform({ id, userId }: {id: string, userId: string}): Promise<void> {
@@ -10,11 +9,16 @@ class DeleteEvent {
         if ( group === undefined ) throw new Error()
         if ( group.users.find(user => user.id === userId) === undefined) throw new Error()
         if ( group.users.find(user => user.id === userId)?.permission === 'user' ) throw new Error()
+        await this.deleteEventRepository.delete({ id })
     }
 }
 
 interface LoadGroupRepository {
     load: (input: { eventId: string }) => Promise<Group | undefined>
+}
+
+interface DeleteEventRepository {
+    delete: (input: { id: string }) => Promise<void>
 }
 
 // Creating as a 'type' instead a class because it does not have behavior yet
@@ -41,18 +45,31 @@ class LoadGroupRepositorySpy implements LoadGroupRepository {
     }
 }
 
+class DeleteEventRepositoryMock implements DeleteEventRepository {
+    id?: string
+    callsCount = 0
+
+    async delete({ id }: { id: string }): Promise<void> {
+        this.id = id
+        this.callsCount++
+    }
+}
+
 type SutTypes = { 
     sut: DeleteEvent, 
-    loadGroupRepository: LoadGroupRepositorySpy
+    loadGroupRepository: LoadGroupRepositorySpy,
+    deleteEventRepository: DeleteEventRepositoryMock
 }
 
 // Factory pattern
 const makeSut = (): SutTypes => {
     const loadGroupRepository = new LoadGroupRepositorySpy()
-    const sut = new DeleteEvent(loadGroupRepository)
+    const deleteEventRepository = new DeleteEventRepositoryMock()
+    const sut = new DeleteEvent(loadGroupRepository, deleteEventRepository)
     return { 
         sut, 
-        loadGroupRepository 
+        loadGroupRepository,
+        deleteEventRepository
     }
 }
 
@@ -124,6 +141,15 @@ describe('DeleteEvent', () => {
         const promise = sut.perform({id, userId})
 
         await expect(promise).resolves.not.toThrowError()
+    })
+
+    it('should delete event', async () => {
+        const { sut, deleteEventRepository } = makeSut()
+
+        await sut.perform({id, userId})
+
+        expect(deleteEventRepository.id).toBe(id)
+        expect(deleteEventRepository.callsCount).toBe(1)
     })
 
 })
