@@ -14,9 +14,11 @@ interface LoadGroupRepository {
 
 class LoadGroupRepositoryMock implements LoadGroupRepository {
     eventId?: string
+    callsCount = 0
 
     async load({ eventId }: { eventId: string }): Promise<void> {
         this.eventId = eventId
+        this.callsCount++
     }
 }
 
@@ -30,5 +32,6 @@ describe('DeleteEvent', () => {
         await sut.perform({id, userId})
 
         expect(loadGroupRepository.eventId).toBe(id)
+        expect(loadGroupRepository.callsCount).toBe(1)
     })
 })
