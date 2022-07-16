@@ -4,21 +4,24 @@ class DeleteEvent {
     ) {}
 
     async perform({ id }: {id: string, userId: string}): Promise<void> {
-        await this.loadGroupRepository.load({ eventId: id})
+        const group = await this.loadGroupRepository.load({ eventId: id})
+        if ( group === undefined ) throw new Error()
     }
 }
 
 interface LoadGroupRepository {
-    load: (input: { eventId: string }) => Promise<void>
+    load: (input: { eventId: string }) => Promise<any>
 }
 
 class LoadGroupRepositoryMock implements LoadGroupRepository {
     eventId?: string
     callsCount = 0
+    output: any = 'any_value'
 
-    async load({ eventId }: { eventId: string }): Promise<void> {
+    async load({ eventId }: { eventId: string }): Promise<any> {
         this.eventId = eventId
         this.callsCount++
+        return this.output
     }
 }
 
@@ -50,4 +53,17 @@ describe('DeleteEvent', () => {
         expect(loadGroupRepository.eventId).toBe(id)
         expect(loadGroupRepository.callsCount).toBe(1)
     })
+
+    it('should throw error on invalid eventId', async () => {
+        const { sut, loadGroupRepository } = makeSut()
+        loadGroupRepository.output = undefined
+
+        // how to test exception at asynchronous statements promise
+        // 1 - get promise into a variable
+        const promise = sut.perform({id, userId})
+
+        // 2 - test promise await rejects against an generic error throws 
+        await expect(promise).rejects.toThrowError()
+    })
+
 })
