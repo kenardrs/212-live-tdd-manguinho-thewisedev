@@ -22,12 +22,28 @@ class LoadGroupRepositoryMock implements LoadGroupRepository {
     }
 }
 
+type SutTypes = { 
+    sut: DeleteEvent, 
+    loadGroupRepository: LoadGroupRepositoryMock 
+}
+
+// Factory pattern
+const makeSut = (): SutTypes => {
+    const loadGroupRepository = new LoadGroupRepositoryMock()
+    const sut = new DeleteEvent(loadGroupRepository)
+    return { 
+        sut, 
+        loadGroupRepository 
+    }
+}
+
 describe('DeleteEvent', () => {
+    // moved to test variables to make easy to reuse it
+    const id = 'any_event_id'
+    const userId = 'any_user_id'
+
     it('should get group data', async () => {
-        const id = 'any_event_id'
-        const userId = 'any_user_id'
-        const loadGroupRepository = new LoadGroupRepositoryMock()
-        const sut = new DeleteEvent(loadGroupRepository)
+        const { sut, loadGroupRepository } = makeSut()
 
         await sut.perform({id, userId})
 
