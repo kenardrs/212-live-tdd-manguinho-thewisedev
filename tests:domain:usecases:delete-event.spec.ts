@@ -9,6 +9,7 @@ class DeleteEvent {
         const group = await this.loadGroupRepository.load({ eventId: id})
         if ( group === undefined ) throw new Error()
         if ( group.users.find(user => user.id === userId) === undefined) throw new Error()
+        if ( group.users.find(user => user.id === userId)?.permission === 'user' ) throw new Error()
     }
 }
 
@@ -87,11 +88,19 @@ describe('DeleteEvent', () => {
             users: [{ id: 'any_user_id', permission: 'any' }]
         }
 
-        // how to test exception at asynchronous statements promise
-        // 1 - set promise into a variable
         const promise = sut.perform({id, userId: 'invalid_id'})
 
-        // 2 - test promise await rejects against an generic error throws 
+        await expect(promise).rejects.toThrowError()
+    })
+
+    it('should throw error if permission is user', async () => {
+        const { sut, loadGroupRepository } = makeSut()
+        loadGroupRepository.output = {
+            users: [{ id: 'any_user_id', permission: 'user' }]
+        }
+
+        const promise = sut.perform({id, userId})
+
         await expect(promise).rejects.toThrowError()
     })
 

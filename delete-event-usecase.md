@@ -15,4 +15,4 @@
 2. Retornar erro
 
 > ## Fluxo alternativo: O usuário não tem permissão
-2, Retornar erro
+2, Retornar erro (admin, owner, user)
