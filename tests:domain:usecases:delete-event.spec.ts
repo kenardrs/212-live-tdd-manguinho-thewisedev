@@ -24,14 +24,14 @@ type Group = {
 
 type GroupUser = {
     id: string
-    permission: string
+    permission: 'owner' | 'admin' | 'user'
 }
 
-class LoadGroupRepositoryMock implements LoadGroupRepository {
+class LoadGroupRepositorySpy implements LoadGroupRepository {
     eventId?: string
     callsCount = 0
     output?: Group = {
-        users: [{ id: 'any_user_id', permission: 'any' }]
+        users: [{ id: 'any_user_id', permission: 'admin' }]
     }
 
     async load({ eventId }: { eventId: string }): Promise<any> {
@@ -43,12 +43,12 @@ class LoadGroupRepositoryMock implements LoadGroupRepository {
 
 type SutTypes = { 
     sut: DeleteEvent, 
-    loadGroupRepository: LoadGroupRepositoryMock 
+    loadGroupRepository: LoadGroupRepositorySpy
 }
 
 // Factory pattern
 const makeSut = (): SutTypes => {
-    const loadGroupRepository = new LoadGroupRepositoryMock()
+    const loadGroupRepository = new LoadGroupRepositorySpy()
     const sut = new DeleteEvent(loadGroupRepository)
     return { 
         sut, 
@@ -85,7 +85,7 @@ describe('DeleteEvent', () => {
     it('should throw error if userId is invalid', async () => {
         const { sut, loadGroupRepository } = makeSut()
         loadGroupRepository.output = {
-            users: [{ id: 'any_user_id', permission: 'any' }]
+            users: [{ id: 'any_user_id', permission: 'admin' }]
         }
 
         const promise = sut.perform({id, userId: 'invalid_id'})
@@ -102,6 +102,28 @@ describe('DeleteEvent', () => {
         const promise = sut.perform({id, userId})
 
         await expect(promise).rejects.toThrowError()
+    })
+
+    it('should not throw error if permission is admin', async () => {
+        const { sut, loadGroupRepository } = makeSut()
+        loadGroupRepository.output = {
+            users: [{ id: 'any_user_id', permission: 'admin' }]
+        }
+
+        const promise = sut.perform({id, userId})
+
+        await expect(promise).resolves.not.toThrowError()
+    })
+
+    it('should not throw error if permission is owner', async () => {
+        const { sut, loadGroupRepository } = makeSut()
+        loadGroupRepository.output = {
+            users: [{ id: 'any_user_id', permission: 'owner' }]
+        }
+
+        const promise = sut.perform({id, userId})
+
+        await expect(promise).resolves.not.toThrowError()
     })
 
 })
