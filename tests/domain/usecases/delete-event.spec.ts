@@ -1,3 +1,4 @@
+import { Group, GroupUser } from '../../../src/domain/models'
 import { DeleteEvent } from '../../../src/domain/usecases'
 import { LoadGroupRepositorySpy, DeleteEventRepositoryMock, DeleteMatchRepositoryMock } from '../repositories'
 
@@ -51,9 +52,9 @@ describe('DeleteEvent', () => {
 
     it('should throw error if userId is invalid', async () => {
         const { sut, loadGroupRepository } = makeSut()
-        loadGroupRepository.output = {
+        loadGroupRepository.output = new Group({
             users: [{ id: 'any_user_id', permission: 'admin' }]
-        }
+        })
 
         const promise = sut.perform({id, userId: 'invalid_id'})
 
@@ -62,9 +63,9 @@ describe('DeleteEvent', () => {
 
     it('should throw error if permission is user', async () => {
         const { sut, loadGroupRepository } = makeSut()
-        loadGroupRepository.output = {
+        loadGroupRepository.output = new Group({
             users: [{ id: 'any_user_id', permission: 'user' }]
-        }
+        })
 
         const promise = sut.perform({id, userId})
 
@@ -72,11 +73,9 @@ describe('DeleteEvent', () => {
     })
 
     it('should not throw error if permission is admin', async () => {
-        const { sut, loadGroupRepository } = makeSut()
-        loadGroupRepository.output = {
-            users: [{ id: 'any_user_id', permission: 'admin' }]
-        }
-
+        // default is admin
+        const { sut } = makeSut() 
+        
         const promise = sut.perform({id, userId})
 
         await expect(promise).resolves.not.toThrowError()
@@ -84,9 +83,9 @@ describe('DeleteEvent', () => {
 
     it('should not throw error if permission is owner', async () => {
         const { sut, loadGroupRepository } = makeSut()
-        loadGroupRepository.output = {
+        loadGroupRepository.output = new Group({
             users: [{ id: 'any_user_id', permission: 'owner' }]
-        }
+        })
 
         const promise = sut.perform({id, userId})
 
