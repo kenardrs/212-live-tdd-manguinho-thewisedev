@@ -1,5 +1,5 @@
-import { Group, GroupUser } from '../../../src/domain/models'
-
+import { Group } from '../../../src/domain/models'
+import { LoadGroupRepository, DeleteEventRepository, DeleteMatchRepository } from '../../domain/repositories'
 class DeleteEvent {
     constructor( 
         private readonly loadGroupRepository: LoadGroupRepository,
@@ -15,18 +15,6 @@ class DeleteEvent {
         await this.deleteEventRepository.delete({ id })
         await this.deleteMatchRepository.delete({ eventId: id })
     }
-}
-
-interface LoadGroupRepository {
-    load: (input: { eventId: string }) => Promise<Group | undefined>
-}
-
-interface DeleteEventRepository {
-    delete: (input: { id: string }) => Promise<void>
-}
-
-interface DeleteMatchRepository {
-    delete: (input: { eventId: string }) => Promise<void>
 }
 
 class LoadGroupRepositorySpy implements LoadGroupRepository {
