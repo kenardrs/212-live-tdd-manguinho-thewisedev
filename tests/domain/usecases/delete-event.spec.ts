@@ -1,55 +1,6 @@
-import { Group } from '../../../src/domain/models'
-import { LoadGroupRepository, DeleteEventRepository, DeleteMatchRepository } from '../../../src/domain/repositories'
-class DeleteEvent {
-    constructor( 
-        private readonly loadGroupRepository: LoadGroupRepository,
-        private readonly deleteEventRepository: DeleteEventRepository,
-        private readonly deleteMatchRepository: DeleteMatchRepository,
-    ) {}
+import { DeleteEvent } from '../../../src/domain/usecases'
+import { LoadGroupRepositorySpy, DeleteEventRepositoryMock, DeleteMatchRepositoryMock } from '../repositories'
 
-    async perform({ id, userId }: {id: string, userId: string}): Promise<void> {
-        const group = await this.loadGroupRepository.load({ eventId: id})
-        if ( group === undefined ) throw new Error()
-        if ( group.users.find(user => user.id === userId) === undefined) throw new Error()
-        if ( group.users.find(user => user.id === userId)?.permission === 'user' ) throw new Error()
-        await this.deleteEventRepository.delete({ id })
-        await this.deleteMatchRepository.delete({ eventId: id })
-    }
-}
-
-class LoadGroupRepositorySpy implements LoadGroupRepository {
-    eventId?: string
-    callsCount = 0
-    output?: Group = {
-        users: [{ id: 'any_user_id', permission: 'admin' }]
-    }
-
-    async load({ eventId }: { eventId: string }): Promise<any> {
-        this.eventId = eventId
-        this.callsCount++
-        return this.output
-    }
-}
-
-class DeleteEventRepositoryMock implements DeleteEventRepository {
-    id?: string
-    callsCount = 0
-
-    async delete({ id }: { id: string }): Promise<void> {
-        this.id = id
-        this.callsCount++
-    }
-}
-
-class DeleteMatchRepositoryMock implements DeleteMatchRepository {
-    eventId?: string
-    callsCount = 0
-
-    async delete({ eventId }: { eventId: string }): Promise<void> {
-        this.eventId = eventId
-        this.callsCount++
-    }
-}
 
 type SutTypes = { 
     sut: DeleteEvent, 
