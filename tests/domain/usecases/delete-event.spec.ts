@@ -1,5 +1,5 @@
 import { Group } from '../../../src/domain/models'
-import { LoadGroupRepository, DeleteEventRepository, DeleteMatchRepository } from '../../domain/repositories'
+import { LoadGroupRepository, DeleteEventRepository, DeleteMatchRepository } from '../../../src/domain/repositories'
 class DeleteEvent {
     constructor( 
         private readonly loadGroupRepository: LoadGroupRepository,
